@@ -2,7 +2,8 @@ import streamlit as st
 import openai
 import os
 from dotenv import load_dotenv
-import textract
+from docx import Document
+import fitz  # PyMuPDF
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -17,10 +18,24 @@ uploaded_file = st.file_uploader("Choose a document...", type=["txt", "pdf", "do
 def read_file(file):
     if file.type == "text/plain":
         return file.read().decode("utf-8")
-    elif file.type == "application/pdf" or file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        return textract.process(file).decode("utf-8")
+    elif file.type == "application/pdf":
+        return read_pdf(file)
+    elif file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        return read_docx(file)
     else:
         return None
+
+def read_pdf(file):
+    doc = fitz.open(stream=file.read(), filetype="pdf")
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    return text
+
+def read_docx(file):
+    doc = Document(file)
+    text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+    return text
 
 if uploaded_file is not None:
     content = read_file(uploaded_file)
@@ -41,4 +56,4 @@ if uploaded_file is not None:
                 st.write("Analysis:")
                 st.write(analysis)
     else:
-        st.error("Unsupported file type.")
+        st.error("Unsupported file type or error reading the file.")
