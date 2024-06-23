@@ -52,7 +52,7 @@ if uploaded_file is not None:
                         {"role": "user", "content": content}
                     ]
                 )
-                analysis = response['choices'][0]['message']['content']
+                analysis = response.choices[0].message["content"]
                 st.write("Analysis:")
                 st.write(analysis)
     else:
